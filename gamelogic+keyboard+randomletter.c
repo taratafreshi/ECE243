@@ -175,6 +175,13 @@ void playGame() {
     int enteredCount = 0; // Count of valid words entered - used for hex display and case checking
 	int totalPossibleWords = countPossibleWords();
 	
+	// incase there is no possible combinations
+	if (totalPossibleWords == 0) {
+            printf("New Game!\n");
+			// OUTPUT SCREEN
+            return; // Exit this function and return to the main menu
+        }
+	
     while (true) {
 		displayOnHex(enteredCount);
         printf("Enter a word (or press 'esc' to exit to main screen): ");	
