@@ -234,15 +234,10 @@ void playGame() {
 void displayOnHex(int count) {
     int displayValue;
     
-    // Assuming the Hex Display is directly compatible with hexadecimal values
-    // and that it can display up to 0xF (15 in decimal) directly.
-    // For numbers greater than this, you might want to implement a more complex logic
-    // to scroll or display only the last digit, depending on your requirements.
-    
     if (count > 15) {
-        displayValue = 0xF; // Optionally handle overflow, for now just cap at 0xF
+        displayValue = 0xF; // for now just cap at 0xF
     } else {
-        displayValue = count; // Direct assignment if within range
+        displayValue = count; 
     }
 
     *HexDisplay = displayValue;
