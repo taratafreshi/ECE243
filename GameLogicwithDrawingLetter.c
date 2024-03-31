@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 // Note: Easy fix, but code only deals with lower case letters right now. Maybe change to upper case?	
 // Note: Get Hex to work	
@@ -49,6 +50,53 @@ int countPossibleWords(); //counter
 // For hex display, not working :(
 void displayOnHex(int count);
 
+
+void plot_pixel(int x, int y, short int line_color);  // plots one pixel
+void clear_screen();                                  // clears whole screen
+void draw_line(int x0, int y0, int x1, int y1, short int color);
+void swap(int *x, int *y);
+void draw_double_line(int x0, int y0, int x1, int y1, short int color);
+void draw_A(int x0, int y0, short int color);
+void draw_circle(int x0, int y0, int radius, short int color);
+void draw_half_circle(int x0, int y0, int radius, short int color);
+void draw_B(int x0, int y0, int radius, short int color);
+void draw_C(int x0, int y0, int radius, short int color);
+void draw_D(int x0, int y0, int radius, short int color);
+void draw_E(int x0, int y0, int height, short int color);
+void draw_F(int x0, int y0, int height, short int color);
+void draw_G(int x0, int y0, int radius, short int color);
+void draw_H(int x0, int y0, int height, short int color);
+void draw_I(int x0, int y0, int height, short int color);
+void draw_J(int x0, int y0, int radius, short int color);
+void draw_K(int x0, int y0, int radius, short int color);
+void draw_L(int x0, int y0, int height, short int color);
+void draw_M(int x0, int y0, int height, short int color);
+void draw_N(int x0, int y0, int height, short int color);
+void draw_O(int x0, int y0, int radius, short int color);
+void draw_P(int x0, int y0, int radius, short int color);
+void draw_Q(int x0, int y0, int radius, short int color);
+void draw_R(int x0, int y0, int radius, short int color);
+void draw_S(int x0, int y0, int height, short int color);
+void draw_T(int x0, int y0, int height, short int color);
+void draw_U(int x0, int y0, int height, short int color);
+void draw_V(int x0, int y0, int height, short int color);
+void draw_W(int x0, int y0, int height, short int color);
+void draw_X(int x0, int y0, int height, short int color);
+void draw_Y(int x0, int y0, int height, short int color);
+void draw_Z(int x0, int y0, int height, short int color);
+
+
+
+void draw_quarter_circle_with_angles(int x0, int y0, int radius,
+                                     short int color, int start_angle,
+                                     int end_angle);
+
+void draw_quarter_circle(int x0, int y0, int radius, short int color);
+
+int pixel_buffer_start;  // global variable
+
+void displayGeneratedLetters();
+
 int main() {
 	// Generates random every time
 	unsigned int seed;
@@ -73,6 +121,8 @@ int main() {
 			// For debugging
 			findAndPrintWords();
 			
+			displayGeneratedLetters();
+			
 			// Play game
             playGame();
 			
@@ -84,6 +134,8 @@ int main() {
 			// For debugging
 			findAndPrintWords();
 			
+			displayGeneratedLetters();
+			
             playGame();
         } else if (key == 2) { // Hard level
             printf("Starting Hard level.\n");
@@ -92,6 +144,8 @@ int main() {
 			// This is used to see what words you can make with the letters
 			// For debugging
 			findAndPrintWords();
+			
+			displayGeneratedLetters();
 			
             playGame();
         }
@@ -133,17 +187,24 @@ int waitForKeyPressAndRelease() {
     }
 }
 
-// Random Letter Generator
+// Random Letter Generator ( but also checks if you can create words with them)
 void generateRandomLetters(int level) {
-    int numberOfLetters = level; // Use level to determine the number of letters
-	
-    for (int i = 0; i < numberOfLetters; ++i) { 
-        generatedLetters[i] = 'a' + (rand() % 26);
-    }
+    int numberOfLetters = level;
+    bool hasValidWords = false;
+    
+    while (!hasValidWords) { // Keep generating until we have at least one valid word
+        for (int i = 0; i < numberOfLetters; ++i) { 
+            generatedLetters[i] = 'a' + (rand() % 26);
+        }
 
-	generatedLetters[numberOfLetters] = '\0';
-	// For debugging
-    printf("Generated Letters: %s\n", generatedLetters);
+        generatedLetters[numberOfLetters] = '\0';
+        // For debugging
+        printf("Generated Letters: %s\n", generatedLetters);
+
+        if (countPossibleWords() > 0) { // Check if there are possible words
+            hasValidWords = true; // Exit the loop if there are valid words
+        }
+    }
 }
 
 // Checks if inputted letter is in the random letter generated array
@@ -345,4 +406,528 @@ int countPossibleWords() {
         }
     }
     return count;
+}
+
+
+
+// code not shown for clear_screen() and draw_line() subroutines
+void draw_A(int x0, int y0, short int color) {
+  // x0 is 75
+  // y0 is also 75
+  draw_double_line(x0, y0, x0 - 10, y0 + 25, color);  // this line is blue
+  draw_double_line(x0, y0, x0 + 10, y0 + 25, color);  // this line is green
+  draw_double_line(x0, y0 + 12, x0 + 5, y0 + 12,
+                   color);  // this line is a pink color
+  draw_double_line(x0, y0 + 12, x0 - 4, y0 + 12,
+                   color);  // this line is a pink color
+}
+
+void plot_pixel(int x, int y, short int line_color) {
+  volatile short int *one_pixel_address;
+
+  one_pixel_address = pixel_buffer_start + (y << 10) + (x << 1);
+
+  *one_pixel_address = line_color;
+}
+
+void clear_screen() {
+  int y, x;
+
+  for (x = 0; x < 320; x++)
+    for (y = 0; y < 240; y++) plot_pixel(x, y, 0);
+}
+
+void draw_line(int x0, int y0, int x1, int y1, short int color) {
+  bool is_steep = abs(y1 - y0) > abs(x1 - x0);
+  int y_step;
+  if (is_steep) {
+    swap(&x0, &y0);
+    swap(&x1, &y1);
+  }
+  if (x0 > x1) {
+    swap(&x0, &x1);
+    swap(&y0, &y1);
+  }
+
+  int deltax = x1 - x0;
+  int deltay = abs(y1 - y0);
+  int error = -(deltax / 2);
+  int y = y0;
+  if (y0 < y1) {
+    y_step = 1;
+  } else {
+    y_step = -1;
+  }
+
+  for (int i = x0; i < x1; i++) {
+    if (is_steep) {
+      plot_pixel(y, i, color);
+    } else {
+      plot_pixel(i, y, color);
+    }
+    error = error + deltay;
+    if (error > 0) {
+      y = y + y_step;
+      error = error - deltax;
+    }
+  }
+}
+
+void swap(int *x, int *y) {
+  int temp = *x;
+  *x = *y;
+  *y = temp;
+}
+
+void draw_double_line(int x0, int y0, int x1, int y1, short int color) {
+  bool straight = ((y0 - y1) / (x0 - x1)) == 0;
+  if (straight) {
+    draw_line(x0, y0, x1, y1, color);
+    draw_line(x0, y0 + 1, x1, y1 + 1, color);
+    draw_line(x0, y0 + 2, x1, y1 + 2, color);
+  } else {
+    draw_line(x0, y0, x1, y1, color);
+    draw_line(x0 + 1, y0, x1 + 1, y1, color);
+    draw_line(x0 + 2, y0, x1 + 2, y1, color);
+  }
+}
+
+void draw_circle(int x0, int y0, int radius, short int color) {
+  int x, y;
+  for (int angle = 0; angle <= 360; angle += 1) {
+    x = (int)(x0 + radius * cos(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    y = (int)(y0 + radius * sin(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    plot_pixel(x, y, color);
+    plot_pixel(x + 1, y, color);
+  }
+}
+
+void draw_half_circle(int x0, int y0, int radius, short int color) {
+  int x, y;
+  for (int angle = 90; angle <= 270;
+       angle += 1) {  // Change the range to draw the top half
+    x = (int)(x0 - radius * cos(angle * M_PI / 180.0) +
+              0.5);  // Change sign of x-coordinate
+    y = (int)(y0 + radius * sin(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    plot_pixel(x, y, color);
+    plot_pixel(x + 1, y + 1, color);
+  }
+}
+
+void draw_B(int x0, int y0, int radius, short int color) {
+  // Draw the top half circle
+  draw_half_circle(x0, y0, radius, color);
+  // Draw the bottom half circle
+  draw_half_circle(x0, y0 + radius * 2, radius, color);
+  // Draw the vertical line connecting the two halves
+  draw_line(x0, y0 - radius, x0, y0 + radius * 3, color);
+  draw_line(x0 - 1, y0 - radius, x0 - 1, y0 + radius * 3, color);
+}
+
+void draw_C(int x0, int y0, int radius, short int color) {
+  int x, y;
+  for (int angle = 90; angle <= 270;
+       angle += 1) {  // Change the range to draw the top half
+    x = (int)(x0 + radius * cos(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    y = (int)(y0 + radius * sin(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    plot_pixel(x, y, color);
+    plot_pixel(x + 1, y + 1, color);
+    plot_pixel(x + 2, y, color);
+  }
+}
+
+void draw_D(int x0, int y0, int radius, short int color) {
+  // Draw the top half circle
+  draw_half_circle(x0, y0, radius, color);
+  // Draw the vertical line
+  draw_line(x0, y0 - radius, x0, y0 + radius, color);
+  draw_line(x0 - 1, y0 - radius, x0 - 1, y0 + radius, color);
+}
+
+void draw_E(int x0, int y0, int height, short int color) {
+  int width = height / 2;  // Set width as half of the height
+
+  // Draw the vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);  // Middle line
+
+  // Draw the horizontal lines on the right side
+  draw_line(x0, y0 - height / 2, x0 + width, y0 - height / 2,
+            color);                          // Top horizontal line
+  draw_line(x0, y0, x0 + width, y0, color);  // Middle horizontal line
+  draw_line(x0, y0 + height / 2, x0 + width, y0 + height / 2,
+            color);  // Bottom horizontal line
+}
+
+void draw_F(int x0, int y0, int height, short int color) {
+  int width = height / 2;  // Set width as half of the height
+
+  // Draw the vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);  // Middle line
+
+  // Draw the horizontal lines on the right side
+  draw_line(x0, y0 - height / 2, x0 + width, y0 - height / 2,
+            color);                          // Top horizontal line
+  draw_line(x0, y0, x0 + width, y0, color);  // Middle horizontal line
+}
+
+void draw_G(int x0, int y0, int radius, short int color) {
+  // Draw the semi-circle
+  draw_C(x0, y0, radius, color);
+
+  // Draw the horizontal line connected to the end of the vertical line
+  draw_line(x0, y0 + (radius / 3) + 1, x0 - radius / 2, y0 + (radius / 3) + 1,
+            color);
+  draw_line(x0, y0 + (radius / 3), x0 - radius / 2, y0 + (radius / 3), color);
+
+  // Draw the vertical line even lower
+  draw_line(x0, y0 + (radius / 3), x0, y0 + radius, color);
+  draw_line(x0 + 1, y0 + (radius / 3), x0 + 1, y0 + radius, color);
+}
+
+void draw_H(int x0, int y0, int height, short int color) {
+  int width = height / 2;  // Set width as half of the height
+
+  // Draw the left vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);
+  draw_line(x0 + 1, y0 - height / 2, x0 + 1, y0 + height / 2, color);
+
+  // Draw the right vertical line
+  draw_line(x0 + width, y0 - height / 2, x0 + width, y0 + height / 2, color);
+  draw_line(x0 + width + 1, y0 - height / 2, x0 + width + 1, y0 + height / 2,
+            color);
+
+  // Draw the horizontal line
+  draw_line(x0, y0, x0 + width, y0, color);
+  draw_line(x0, y0 + 1, x0 + width, y0 + 1, color);
+}
+
+void draw_I(int x0, int y0, int height, short int color) {
+  // Draw the vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);
+  draw_line(x0 + 1, y0 - height / 2, x0 + 1, y0 + height / 2, color);
+}
+
+void draw_J(int x0, int y0, int radius, short int color) {
+  // Draw the vertical line
+  draw_line(x0, y0 - radius / 2, x0, y0 + radius, color);
+  draw_line(x0 + 1, y0 - radius / 2, x0 + 1, y0 + radius, color);
+
+  // draw the horizontal line
+  draw_line(x0 - radius / 2, y0 - radius / 2, x0 + radius / 2, y0 - radius / 2,
+            color);
+  draw_line(x0 - (radius / 2), y0 - (radius / 2) + 1, x0 + (radius / 2),
+            y0 - (radius / 2) + 1, color);
+
+  // Draw the quarter circle
+  draw_quarter_circle(x0, y0 + radius, radius, color);
+}
+
+void draw_quarter_circle(int x0, int y0, int radius, short int color) {
+  int x, y;
+  x0 = x0 - radius;
+  for (int angle = 0; angle <= 90; angle += 1) {
+    x = (int)(x0 + radius * cos(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    y = (int)(y0 + radius * sin(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    plot_pixel(x, y, color);
+    plot_pixel(x + 1, y, color);
+  }
+}
+
+void draw_K(int x0, int y0, int height, short int color) {
+  // Draw the vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);
+  draw_line(x0 + 1, y0 - height / 2, x0 + 1, y0 + height / 2, color);
+
+  // Draw the diagonal line with positive slope
+  draw_double_line(x0, y0, x0 + height / 2.5, y0 + height / 2, color);
+  draw_double_line(x0 + 1, y0 + 1, x0 + (height / 2.5) + 1,
+                   y0 + (height / 2) + 1, color);
+
+  // Draw the diagonal line with negative slope
+  draw_double_line(x0, y0, x0 + height / 2.5, y0 - height / 2, color);
+}
+
+void draw_L(int x0, int y0, int height, short int color) {
+  int width = height / 2;  // Set width as half of the height
+
+  // Draw the vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 2, color);
+  draw_line(x0 + 1, y0 - (height / 2), x0 + 1, y0 + (height / 2), color);
+
+  // Draw the horizontal line
+  draw_double_line(x0, y0 + height / 2, x0 + width, y0 + height / 2, color);
+}
+
+void draw_M(int x0, int y0, int height, short int color) {
+  // Draw the first vertical line
+  draw_line(x0 - height / 4, y0, x0 - height / 4, y0 + height / 2, color);
+  draw_line(1 + x0 - height / 4, y0, 1 + x0 - height / 4, y0 + height / 2,
+            color);
+
+  // Draw the second vertical line
+  draw_line(x0 + height / 4, y0, x0 + height / 4, y0 + height / 2, color);
+  draw_line(1 + x0 + height / 4, y0, 1 + x0 + height / 4, y0 + height / 2,
+            color);
+
+  // Draw the first diagonal line with positive slope
+  draw_double_line(x0 - height / 4, y0, x0, y0 + height / 2, color);
+
+  // Draw the second diagonal line with negative slope
+  draw_double_line(x0, y0 + height / 2, x0 + height / 4, y0, color);
+}
+
+void draw_N(int x0, int y0, int height, short int color) {
+  // Draw the first vertical line
+  draw_line(x0 - height / 4, y0, x0 - height / 4, y0 + height / 2, color);
+  draw_line(1 + x0 - height / 4, y0, 1 + x0 - height / 4, y0 + height / 2,
+            color);
+
+  // Draw the second vertical line
+  draw_line(x0, y0, x0, y0 + height / 2, color);
+  draw_line(1 + x0, y0, 1 + x0, y0 + height / 2, color);
+
+  // Draw the first diagonal line with positive slope
+  draw_double_line(x0 - height / 4, y0, x0, y0 + height / 2, color);
+
+  // Draw the second diagonal line with negative slope
+}
+
+void draw_O(int x0, int y0, int radius, short int color) {
+  draw_circle(x0, y0, radius, color);
+}
+
+void draw_P(int x0, int y0, int radius, short int color) {
+  // Draw the top half circle
+  draw_half_circle(x0, y0, radius, color);
+  // Draw the bottom half circle
+  // draw_half_circle(x0, y0 + radius * 2, radius, color);
+  // Draw the vertical line connecting the two halves
+  draw_line(x0, y0 - radius, x0, y0 + radius * 2.5, color);
+  draw_line(x0 - 1, y0 - radius, x0 - 1, y0 + radius * 2.5, color);
+}
+
+void draw_Q(int x0, int y0, int radius, short int color) {
+  // Draw the circle
+  draw_circle(x0, y0, radius, color);
+
+  // Draw the tail segment
+  draw_double_line(x0 + radius / 2, y0 + radius / 2, x0 + radius, y0 + radius,
+                   color);
+  draw_double_line(1 + x0 + radius / 2, y0 + radius / 2, 1 + x0 + radius,
+                   y0 + radius, color);
+}
+
+void draw_R(int x0, int y0, int radius, short int color) {
+  // Draw the top half circle
+  draw_half_circle(x0, y0 - radius / 6, radius, color);
+  // Draw the bottom half circle
+  // draw_half_circle(x0, y0 + radius * 2, radius, color);
+  // Draw the vertical line connecting the two halves
+  draw_line(x0, y0 - radius, x0, y0 + radius, color);
+  draw_line(x0 - 1, y0 - radius, x0 - 1, y0 + radius * 2.5, color);
+  draw_line(x0 - 2, y0 - radius, x0 - 2, y0 + radius * 2.5, color);
+
+  draw_double_line(x0, y0 + radius, x0 + radius, y0 + radius * 2.5, color);
+}
+void draw_S(int x0, int y0, int height, short int color) {
+  int radius = height / 2;  // Radius of the quarter circles
+
+  // Draw top left quarter circle
+  // draw_quarter_circle_with_angles(x0, y0 - radius, radius, color, 0, 90); //
+  // Start from 0, end at 90
+
+  // Draw bottom left quarter circle
+  // draw_quarter_circle_with_angles(x0, y0 + radius, radius, color, 180, 270);
+  // // Start from 180, end at 270
+
+  // Draw top right quarter circle
+  draw_quarter_circle_with_angles(x0, y0 - radius, radius, color, 90,
+                                  290);  // Start from 90, end at 180
+  draw_quarter_circle_with_angles(x0 + 1, y0 - radius, radius, color, 90, 290);
+  // Draw bottom right quarter circle
+  draw_quarter_circle_with_angles(x0, y0 + radius, radius, color, 270,
+                                  500);  // Start from 270, end at 360
+  draw_quarter_circle_with_angles(1 + x0, y0 + radius, radius, color, 270, 500);
+}
+
+void draw_quarter_circle_with_angles(int x0, int y0, int radius,
+                                     short int color, int start_angle,
+                                     int end_angle) {
+  int x, y;
+  for (int angle = start_angle; angle <= end_angle; angle += 1) {
+    x = (int)(x0 + radius * cos(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    y = (int)(y0 + radius * sin(angle * M_PI / 180.0) +
+              0.5);  // Round to nearest integer
+    plot_pixel(x, y, color);
+  }
+}
+
+void draw_T(int x0, int y0, int height, short int color) {
+  int width = height /
+              4;  // Set the width of the horizontal line relative to the height
+
+  // Draw horizontal line
+  draw_double_line(x0 - width, y0 - height / 2, x0 + width, y0 - height / 2,
+                   color);
+
+  // Draw vertical line
+  draw_line(x0, y0 - height / 2, x0, y0 + height / 3, color);
+  draw_line(-1 + x0, y0 - height / 2, -1 + x0, y0 + height / 3, color);
+}
+
+void draw_U(int x0, int y0, int height, short int color) {
+  int radius = height / 4;  // Radius of the semi-circle
+  int width = height / 2;   // Width of the vertical lines
+
+  // Draw left vertical line
+  draw_line(x0 - width / 2, y0 - height / 3, x0 - width / 2, y0 + height / 4,
+            color);
+  draw_line(1 + x0 - width / 2, y0 - height / 3, 1 + x0 - width / 2,
+            y0 + height / 4, color);
+
+  // Draw right vertical line
+  draw_line(x0 + width / 2, y0 - height / 3, x0 + width / 2, y0 + height / 4,
+            color);
+  draw_line(1 + x0 + width / 2, y0 - height / 3, 1 + x0 + width / 2,
+            y0 + height / 4, color);
+
+  // Draw semi-circle at the bottom
+  draw_quarter_circle_with_angles(x0, y0 + height / 4, radius, color, 0,
+                                  180);  // Start from 180, end at 360
+	  draw_quarter_circle_with_angles(x0+1, y0 + height / 4, radius, color, 0,
+                                  180);  // Start from 180, end at 360
+}
+
+void draw_V(int x0, int y0, int height, short int color) {
+    int width = height / 2; // Width of the "V" shape
+    
+    // Draw left line
+    draw_double_line(x0 - width / 2, y0 - height / 2, x0, y0 + height / 2, color);
+    
+    // Draw right line
+    draw_double_line(x0, y0 + height / 2, x0 + width / 2, y0 - height / 2, color);
+}
+
+void draw_W(int x0, int y0, int height, short int color) {
+    int width = height / 2; // Width of the "W" shape
+    
+    // Draw left line
+    draw_double_line(x0 - width / 2, y0 - height / 2, x0 - width / 4, y0 + height / 2, color);
+    
+    // Draw left-middle line
+    draw_double_line(x0 - width / 4, y0 + height / 2, x0, y0 - height / 4, color);
+    
+    // Draw right-middle line
+    draw_double_line(x0, y0 - height / 4, x0 + width / 4, y0 + height / 2, color);
+    
+    // Draw right line
+    draw_double_line(x0 + width / 4, y0 + height / 2, x0 + width / 2, y0 - height / 2, color);
+}
+
+void draw_X(int x0, int y0, int height, short int color) {
+    int width = height / 2; // Width of the "X" shape
+    
+    // Draw diagonal line from top-left to bottom-right
+    draw_double_line(x0 - width / 2, y0 - height / 2, x0 + width / 2, y0 + height / 2, color);
+    
+    // Draw diagonal line from top-right to bottom-left
+    draw_double_line(x0 + width / 2, y0 - height / 2, x0 - width / 2, y0 + height / 2, color);
+}
+
+void draw_Y(int x0, int y0, int height, short int color) {
+    int width = height / 2; // Width of the "Y" shape
+    
+    // Draw upper diagonal line
+    draw_double_line(x0, y0 - height / 2, x0 - width / 2, y0-height, color);
+    
+    // Draw lower diagonal line
+    draw_double_line(x0, y0 - height / 2, x0 + width / 2, y0-height, color);
+    
+    // Draw vertical line
+    draw_line(x0, y0 - height / 2, x0, y0 + width / 4, color);
+	    draw_line(x0+1, y0 - height / 2, x0+1, y0 + width / 4, color);
+	    draw_line(x0+2, y0 - height / 2, x0+2, y0 + width / 4, color);
+
+}
+
+void draw_Z(int x0, int y0, int height, short int color) {
+    int width = height; // Width of the "Z" shape
+    
+    // Draw top diagonal line
+    draw_double_line(x0 - width / 2, y0 - height / 2, x0 + width / 2, y0 - height / 2, color);
+    
+    // Draw bottom diagonal line
+    draw_double_line(x0 + width / 2, y0 - height / 2, x0 - width / 2, y0 + height / 2, color);
+    
+    // Draw horizontal line
+    draw_double_line(x0 - width / 2, y0 + height / 2, x0 + width / 2, y0 + height / 2, color);
+}
+
+void displayGeneratedLetters() {
+    volatile int *pixel_ctrl_ptr = (int *)0xFF203020;
+    /* Read location of the pixel buffer from the pixel buffer controller */
+    pixel_buffer_start = *pixel_ctrl_ptr;
+
+    clear_screen();
+
+    int lettersCount = strlen(generatedLetters); // Number of generated letters
+    int gridSize = sqrt(lettersCount); // Determine grid size (so like 4 for 16 letters)
+    
+	// Can be adjusted
+	int cellSize = 30; // Cell size for each
+	
+    int totalGridWidth = cellSize * gridSize; // Total width of the grid
+    int totalGridHeight = cellSize * gridSize; // Total height of the grid
+	
+    int startX = (320 - totalGridWidth) / 2; // Center grid horizontally
+    int startY = (240 - totalGridHeight) / 2; // Center grid vertically
+    short int color = 0x001F; 
+
+    for (int i = 0; i < lettersCount; ++i) {
+        char letter = generatedLetters[i];
+
+        // Calculate position for the current letter
+        int x = startX + (i % gridSize) * cellSize;
+        int y = startY + (i / gridSize) * cellSize;
+
+        switch (letter) {
+				
+			// Size can be adjusted	
+            case 'a': draw_A(x, y, color); break;
+            case 'b': draw_B(x, y, 5, color); break;
+            case 'c': draw_C(x, y, 10, color); break;
+            case 'd': draw_D(x, y, 10, color); break;
+            case 'e': draw_E(x, y, 20, color); break;
+            case 'f': draw_F(x, y, 20, color); break;
+            case 'g': draw_G(x, y, 20, color); break;
+            case 'h': draw_H(x, y, 20, color); break;
+            case 'i': draw_I(x, y, 20, color); break;
+            case 'j': draw_J(x, y, 10, color); break;
+            case 'k': draw_K(x, y, 20, color); break;
+            case 'l': draw_L(x, y, 10, color); break;
+            case 'm': draw_M(x, y, 20, color); break;
+            case 'n': draw_N(x, y, 20, color); break;
+            case 'o': draw_O(x, y, 10, color); break;
+            case 'p': draw_P(x, y, 20, color); break;
+            case 'q': draw_Q(x, y, 10, color); break;
+            case 'r': draw_R(x, y, 20, color); break;
+            case 's': draw_S(x, y, 20, color); break;
+            case 't': draw_T(x, y, 20, color); break;
+            case 'u': draw_U(x, y, 20, color); break;
+            case 'v': draw_V(x, y, 20, color); break;
+            case 'w': draw_W(x, y, 20, color); break;
+            case 'x': draw_X(x, y, 20, color); break;
+            case 'y': draw_Y(x, y, 10, color); break;
+            case 'z': draw_Z(x, y, 20, color); break;
+            default: break; 
+        }
+    }
 }
